@@ -1,14 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
 import React from "react";
+import PostsScreen from "./PostsScreen";
 
-const Home = () => {
-  return (
-    <View>
-      <Text>Home</Text>
-    </View>
-  );
-};
-
-export default Home;
-
-const styles = StyleSheet.create({});
+export default function Home() {
+  return <PostsScreen />;
+}

@@ -14,7 +14,6 @@ const PostsScreen = () => {
           <Text style={styles.userEmail}>email@example.com</Text>
         </View>
       </View>
-      <Text>PostsScreen</Text>
     </View>
   );
 };
