@@ -1,26 +1,20 @@
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import {
-  ImageBackground,
-  StyleSheet,
-  View,
-  TouchableWithoutFeedback,
-  Platform,
-  Keyboard,
-  KeyboardAvoidingView,
-  Dimensions,
-} from "react-native";
-import image from "./assets/images/background.jpg";
-import RegistrationScreen from "./screens/RegistrationScreen";
-import LoginScreen from "./screens/LoginScreen";
+import { StyleSheet, View } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import AuthNavigation from "./screens/AuthNavigation";
+import MainNavigation from "./screens/MainNavigator";
 
-const windowDimensions = Dimensions.get("window").width;
+const useRoute = (isAuth) => {
+  if (!isAuth) {
+    return <AuthNavigation />;
+  }
+  return <MainNavigation />;
+};
 
 export default function App() {
-  const [isShowKeyboard, setIsShowKeyboard] = useState(false);
-  const [dimensions, setDimensions] = useState(windowDimensions);
   const [fontsLoaded] = useFonts({
     "Roboto-Bold": require("./assets/Fonts/Roboto-Bold.ttf"),
     "Roboto-Medium": require("./assets/Fonts/Roboto-Medium.ttf"),
@@ -34,56 +28,19 @@ export default function App() {
     prepare();
   }, []);
 
-  useEffect(() => {
-    const onChange = () => {
-      const width = Dimensions.get("window").width;
-      setDimensions(width);
-    };
-
-    Dimensions.addEventListener("change", onChange);
-    return () => {
-      Dimensions.removeEventListener("change", onChange);
-    };
-  }, []);
-
   if (!fontsLoaded) {
     return null;
   } else {
     SplashScreen.hideAsync();
   }
-
-  const keyboardHide = () => {
-    setIsShowKeyboard(false);
-    Keyboard.dismiss();
-  };
-
-  const onFocus = () => {
-    setIsShowKeyboard(true);
-  };
-
+  const routing = useRoute(true);
   return (
-    <TouchableWithoutFeedback onPress={keyboardHide}>
-      <View style={{ ...styles.container, width: dimensions }}>
-        <ImageBackground source={image} style={styles.image}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-          >
-            <RegistrationScreen
-              keyboardHide={keyboardHide}
-              isShowKeyboard={isShowKeyboard}
-              onFocus={onFocus}
-            />
-            {/* <LoginScreen
-              keyboardHide={keyboardHide}
-              isShowKeyboard={isShowKeyboard}
-              onFocus={onFocus}
-            /> */}
-          </KeyboardAvoidingView>
-        </ImageBackground>
-
+    <NavigationContainer>
+      <View style={styles.container}>
+        {routing}
         <StatusBar style="auto" />
       </View>
-    </TouchableWithoutFeedback>
+    </NavigationContainer>
   );
 }
 
@@ -91,10 +48,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-  },
-  image: {
-    flex: 1,
-    resizeMode: "cover",
-    justifyContent: "flex-end",
   },
 });
