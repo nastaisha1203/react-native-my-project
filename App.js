@@ -1,18 +1,10 @@
-import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import { StyleSheet, View } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
-import AuthNavigation from "./screens/AuthNavigation";
-import MainNavigation from "./screens/MainNavigator";
 
-const useRoute = (isAuth) => {
-  if (!isAuth) {
-    return <AuthNavigation />;
-  }
-  return <MainNavigation />;
-};
+import { Provider } from "react-redux";
+import { store } from "./redux/store";
+import Main from "./components/Main";
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -33,20 +25,10 @@ export default function App() {
   } else {
     SplashScreen.hideAsync();
   }
-  const routing = useRoute(true);
+
   return (
-    <NavigationContainer>
-      <View style={styles.container}>
-        {routing}
-        <StatusBar style="auto" />
-      </View>
-    </NavigationContainer>
+    <Provider store={store}>
+      <Main />
+    </Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-});

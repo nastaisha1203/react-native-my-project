@@ -1,33 +1,33 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  FlatList,
-  Pressable,
-} from "react-native";
 import React, { useState, useEffect } from "react";
-import { Fontisto } from "@expo/vector-icons";
-import { SimpleLineIcons } from "@expo/vector-icons";
+import { firestore } from "../../firebase/config";
+import { collection, doc, onSnapshot } from "firebase/firestore";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  Text,
+} from "react-native";
 
-const DefaultScreenPosts = ({ route, navigation }) => {
+const DefaultScreen = ({ route, navigation }) => {
   const [posts, setPosts] = useState([]);
 
+  const getAllPost = async () => {
+    await onSnapshot(collection(firestore, "posts"), (data) =>
+      setPosts(
+        data.docs.map((doc) => ({
+          ...doc.data(),
+          id: doc.id,
+        }))
+      )
+    );
+  };
+
   useEffect(() => {
-    if (route.params) {
-      setPosts((prevState) => [...prevState, route.params]);
-    }
-    return;
-  }, [route.params]);
+    getAllPost();
+  }, []);
 
-  const goToMap = (latitude, longitude) =>
-    navigation.navigate("Map", {
-      latitude: latitude,
-      longitude: longitude,
-    });
-
-  const goToComments = (photo) =>
-    navigation.navigate("Comments", { photo: photo });
   return (
     <View style={styles.container}>
       <View style={styles.user}>
@@ -40,64 +40,69 @@ const DefaultScreenPosts = ({ route, navigation }) => {
           <Text style={styles.userEmail}>email@example.com</Text>
         </View>
       </View>
-
-      {posts.length !== 0 && (
-        <FlatList
-          data={posts}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              {item.photo.photo !== "" && item.photo.photo ? (
-                <Image
-                  style={styles.image}
-                  source={{ uri: item.photo.photo }}
-                />
-              ) : (
-                <View
-                  style={{ ...styles.image, backgroundColor: "#BDBDBD" }}
-                ></View>
-              )}
-              <Text style={styles.description}>Description</Text>
-              <View style={styles.btnWrapper}>
-                <Pressable
-                  style={styles.button}
-                  onPress={() => goToComments(item.photo.photo)}
-                >
-                  <Fontisto name="comment" size={24} color="#BDBDBD" />
-                  <Text style={styles.commentText}>15</Text>
-                </Pressable>
-                <Pressable
-                  style={styles.button}
-                  onPress={() =>
-                    goToMap(item.photo.latitude, item.photo.longitude)
-                  }
-                >
-                  <SimpleLineIcons
-                    name="location-pin"
-                    size={24}
-                    color="#BDBDBD"
-                    style={styles.icon}
-                  />
-                  <Text style={styles.locationText}>Location description</Text>
-                </Pressable>
-              </View>
+      <FlatList
+        data={posts}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => (
+          <View
+            style={{
+              marginBottom: 8,
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: 10,
+            }}
+          >
+            <Image
+              source={{ uri: item.photo }}
+              style={{
+                width: 350,
+                height: 250,
+                borderRadius: 10,
+              }}
+            />
+            <View>
+              <Text>{item.comment}</Text>
             </View>
-          )}
-        />
-      )}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <TouchableOpacity
+                style={styles.btnPress}
+                onPress={() =>
+                  navigation.navigate("Map", {
+                    location: item.location,
+                  })
+                }
+              >
+                <Text style={{ color: `#fff`, margin: 8 }}>Map</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.btnPress}
+                onPress={() =>
+                  navigation.navigate("Comments", {
+                    postId: item.id,
+                  })
+                }
+              >
+                <Text style={{ color: `#fff`, margin: 8 }}>Comments</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      />
     </View>
   );
 };
-
-export default DefaultScreenPosts;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 32,
-    paddingHorizontal: 16,
+    justifyContent: "center",
   },
-
   user: {
     flexDirection: "row",
     alignItems: "center",
@@ -122,47 +127,20 @@ const styles = StyleSheet.create({
     lineHeight: 13,
     color: "#212121",
   },
-  card: {
-    marginBottom: 32,
-  },
   image: {
     flex: 1,
     resizeMode: "cover",
-    width: "100%",
-    height: 240,
-    borderRadius: 8,
-    marginBottom: 8,
+    justifyContent: "center",
   },
-  description: {
-    fontWeight: 500,
-    fontSize: 16,
-    lineHeight: 19,
-    color: "#212121",
-    marginBottom: 8,
-  },
-  btnWrapper: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  button: {
-    display: "flex",
-    flexDirection: "row",
-  },
-  icon: { marginRight: 8 },
-
-  commentText: {
-    fontWeight: 400,
-    fontSize: 16,
-    lineHeight: 19,
-    color: "#BDBDBD",
-    marginLeft: 8,
-  },
-  locationText: {
-    fontWeight: 400,
-    fontSize: 16,
-    lineHeight: 19,
-    textDecorationLine: "underline",
-    color: "#212121",
-    marginLeft: 8,
+  btnPress: {
+    marginHorizontal: 80,
+    marginTop: 20,
+    backgroundColor: `#FF6C00`,
+    minWidth: 80,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
+export default DefaultScreen;

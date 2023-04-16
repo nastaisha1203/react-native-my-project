@@ -15,6 +15,11 @@ import {
   Image,
 } from "react-native";
 import image from "../../assets/images/background.jpg";
+
+import { useDispatch } from "react-redux";
+
+import { registerUser } from "../../redux/auth/authOperations";
+
 const initialState = {
   login: "",
   email: "",
@@ -29,6 +34,8 @@ export default function RegistrationScreen({ navigation }) {
   const [isShowKeyboard, setIsShowKeyboard] = useState(false);
   const [isNotShownPassword, setIsNotShownPassword] = useState(true);
   const [dimensions, setDimensions] = useState(windowDimensions);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const onChange = () => {
@@ -50,10 +57,10 @@ export default function RegistrationScreen({ navigation }) {
     setIsShowKeyboard(true);
   };
 
-  const keyboardHideSubmitForm = () => {
+  const handleSubmit = () => {
     keyboardHide();
+    dispatch(registerUser(state));
     setState(initialState);
-    console.log(state);
   };
 
   return (
@@ -91,32 +98,32 @@ export default function RegistrationScreen({ navigation }) {
               >
                 <TextInput
                   style={styles.input}
+                  value={state.nickName}
                   onChangeText={(value) =>
-                    setState((prevState) => ({ ...prevState, login: value }))
+                    setState((prevState) => ({ ...prevState, nickName: value }))
                   }
-                  value={login}
                   placeholder="Логин"
                   onFocus={onFocus}
                 />
                 <TextInput
                   style={styles.input}
+                  value={state.email}
                   onChangeText={(value) =>
                     setState((prevState) => ({ ...prevState, email: value }))
                   }
-                  value={email}
                   placeholder="Адрес электронной почты"
                   onFocus={onFocus}
                 />
                 <View style={{ position: "relative" }}>
                   <TextInput
                     style={{ ...styles.input, marginBottom: 0 }}
+                    value={state.password}
                     onChangeText={(value) =>
                       setState((prevState) => ({
                         ...prevState,
                         password: value,
                       }))
                     }
-                    value={password}
                     placeholder="Пароль"
                     secureTextEntry={isNotShownPassword}
                     onFocus={onFocus}
@@ -133,10 +140,7 @@ export default function RegistrationScreen({ navigation }) {
               </View>
               {!isShowKeyboard && (
                 <View>
-                  <TouchableOpacity
-                    style={styles.btn}
-                    onPress={keyboardHideSubmitForm}
-                  >
+                  <TouchableOpacity style={styles.btn} onPress={handleSubmit}>
                     <Text style={styles.btnTitle}>Зарегистрироваться</Text>
                   </TouchableOpacity>
                   <View style={styles.navigationContainer}>

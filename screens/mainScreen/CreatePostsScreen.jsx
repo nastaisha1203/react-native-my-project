@@ -18,24 +18,38 @@ import {
 } from "@expo/vector-icons";
 import { Camera, CameraType } from "expo-camera";
 import * as Location from "expo-location";
+import { useSelector } from "react-redux";
+
+import { storage, firestore } from "../../firebase/config";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  addDoc,
+  collection,
+  doc,
+  serverTimestamp,
+  setDoc,
+} from "firebase/firestore";
 
 const initialState = {
   photo: null,
+  comments: 0,
   description: "",
-  location: "",
+  placeName: "",
   latitude: "",
   longitude: "",
+  id: "",
 };
 
 const CreatePostsScreen = ({ navigation }) => {
   const [keyboardStatus, setKeyboardStatus] = useState("");
   const [camera, setCamera] = useState(null);
-  const [type, setType] = useState(CameraType.back);
   const [state, setState] = useState(initialState);
   const [isDisabled, setDisabled] = useState(true);
   const [location, setLocation] = useState(null);
+  const [type, setType] = useState(CameraType.back);
   const [errorMsg, setErrorMsg] = useState(null);
-  const { photo } = state;
+  const { userId, nickName } = useSelector((state) => state.auth);
+  const { name, photo, description, placeName } = state;
 
   useEffect(() => {
     const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
@@ -54,7 +68,7 @@ const CreatePostsScreen = ({ navigation }) => {
     if (
       state.photo !== "" &&
       state.description !== "" &&
-      state.location !== ""
+      state.placeName !== ""
     ) {
       setDisabled(false);
     }
@@ -74,6 +88,9 @@ const CreatePostsScreen = ({ navigation }) => {
   }, []);
 
   const takePhoto = async () => {
+    // const photo = await camera.takePictureAsync();
+    // setPhoto(photo.uri);
+
     const photo = await camera.takePictureAsync();
     const location = await Location.getCurrentPositionAsync();
     setState((prevState) => ({
@@ -85,16 +102,45 @@ const CreatePostsScreen = ({ navigation }) => {
   };
 
   const sendPhoto = () => {
+    uploadPostToServer();
     navigation.navigate("DefaultScreenPosts", { photo: state });
-    setCamera(null);
+    // setCamera(null);
     setState(initialState);
     setDisabled(true);
   };
 
-  const removePost = () => {
-    setState(initialState);
-    navigation.navigate("DefaultScreenPosts");
+  const uploadPostToServer = async () => {
+    const uploadPhoto = await uploadPhotoToServer();
+    const uploadObj = {
+      photo: uploadPhoto,
+      comments: 0,
+      location: location.coords,
+      userId,
+      nickName,
+      description: description,
+      placeName: placeName,
+      // latitude: "",
+      // longitude: "",
+    };
+    const dbRef = collection(firestore, "posts");
+    const dbPost = await addDoc(dbRef, uploadObj);
   };
+
+  const uploadPhotoToServer = async () => {
+    const response = await fetch(photo);
+    const file = await response.blob();
+    const uniqePostId = Date.now().toString();
+    const data = ref(storage, `postImage/${uniqePostId}`);
+    await uploadBytes(data, file);
+
+    const processPhoto = await getDownloadURL(data);
+    return processPhoto;
+  };
+
+  // const removePost = () => {
+  //   setState(initialState);
+  //   navigation.navigate("DefaultScreenPosts");
+  // };
 
   return (
     <KeyboardAvoidingView
@@ -206,11 +252,11 @@ const CreatePostsScreen = ({ navigation }) => {
             style={styles.inputLocation}
             mode="outlined"
             placeholder="Местность..."
-            value={state.location}
+            value={state.placeName}
             onChangeText={(value) =>
               setState((prevState) => ({
                 ...prevState,
-                location: value,
+                placeName: value,
               }))
             }
           />
@@ -243,7 +289,6 @@ const CreatePostsScreen = ({ navigation }) => {
               },
               styles.removeBtn,
             ]}
-            onPress={removePost}
           >
             <FontAwesome5 name="trash-alt" size={24} color="#BDBDBD" />
           </Pressable>

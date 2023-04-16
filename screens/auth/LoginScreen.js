@@ -14,6 +14,10 @@ import {
 } from "react-native";
 import image from "../../assets/images/background.jpg";
 
+import { authSignInUser } from "../../redux/auth/authOperations";
+
+import { useDispatch } from "react-redux";
+
 const initialState = {
   email: "",
   password: "",
@@ -27,6 +31,8 @@ export default function LoginScreen({ navigation }) {
   const [isNotShownPassword, setIsNotShownPassword] = useState(true);
   const [isShowKeyboard, setIsShowKeyboard] = useState(false);
   const [dimensions, setDimensions] = useState(windowDimensions);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const onChange = () => {
@@ -49,10 +55,10 @@ export default function LoginScreen({ navigation }) {
     setIsShowKeyboard(true);
   };
 
-  const keyboardHideSubmitForm = () => {
+  const handleSubmit = () => {
     keyboardHide();
+    dispatch(authSignInUser(state));
     setState(initialState);
-    console.log(state);
   };
 
   return (
@@ -78,23 +84,23 @@ export default function LoginScreen({ navigation }) {
               >
                 <TextInput
                   style={styles.input}
+                  value={state.email}
                   onChangeText={(value) =>
                     setState((prevState) => ({ ...prevState, email: value }))
                   }
-                  value={email}
                   placeholder="Адрес электронной почты"
                   onFocus={onFocus}
                 />
                 <View style={{ position: "relative" }}>
                   <TextInput
                     style={{ ...styles.input, marginBottom: 0 }}
+                    value={state.password}
                     onChangeText={(value) =>
                       setState((prevState) => ({
                         ...prevState,
                         password: value,
                       }))
                     }
-                    value={password}
                     placeholder="Пароль"
                     secureTextEntry={isNotShownPassword}
                     onFocus={onFocus}
@@ -111,10 +117,7 @@ export default function LoginScreen({ navigation }) {
               </View>
               {!isShowKeyboard && (
                 <View>
-                  <TouchableOpacity
-                    style={styles.btn}
-                    onPress={keyboardHideSubmitForm}
-                  >
+                  <TouchableOpacity style={styles.btn} onPress={handleSubmit}>
                     <Text style={styles.btnTitle}>Войти</Text>
                   </TouchableOpacity>
                   <View style={styles.navigationContainer}>
