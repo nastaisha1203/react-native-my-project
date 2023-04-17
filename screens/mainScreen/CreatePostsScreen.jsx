@@ -3,6 +3,7 @@ import {
   Image,
   Text,
   View,
+  Button,
   TextInput,
   Pressable,
   Platform,
@@ -16,7 +17,7 @@ import {
   FontAwesome5,
   FontAwesome,
 } from "@expo/vector-icons";
-import { Camera, CameraType } from "expo-camera";
+import { Camera } from "expo-camera";
 import * as Location from "expo-location";
 import { useSelector } from "react-redux";
 
@@ -46,8 +47,8 @@ const CreatePostsScreen = ({ navigation }) => {
   const [state, setState] = useState(initialState);
   const [isDisabled, setDisabled] = useState(true);
   const [location, setLocation] = useState(null);
-  const [type, setType] = useState(CameraType.back);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [permission, requestPermission] = Camera.useCameraPermissions();
   const { userId, nickName } = useSelector((state) => state.auth);
   const { name, photo, description, placeName } = state;
 
@@ -87,10 +88,24 @@ const CreatePostsScreen = ({ navigation }) => {
     })();
   }, []);
 
-  const takePhoto = async () => {
-    // const photo = await camera.takePictureAsync();
-    // setPhoto(photo.uri);
+  if (!permission) {
+    // Camera permissions are still loading
+    return <View />;
+  }
 
+  if (!permission.granted) {
+    // Camera permissions are not granted yet
+    return (
+      <View style={styles.container}>
+        <Text style={{ textAlign: "center" }}>
+          We need your permission to show the camera
+        </Text>
+        <Button onPress={requestPermission} title="grant permission" />
+      </View>
+    );
+  }
+
+  const takePhoto = async () => {
     const photo = await camera.takePictureAsync();
     const location = await Location.getCurrentPositionAsync();
     setState((prevState) => ({
@@ -137,11 +152,6 @@ const CreatePostsScreen = ({ navigation }) => {
     return processPhoto;
   };
 
-  // const removePost = () => {
-  //   setState(initialState);
-  //   navigation.navigate("DefaultScreenPosts");
-  // };
-
   return (
     <KeyboardAvoidingView
       style={styles.keyboardAvoidingView}
@@ -167,17 +177,13 @@ const CreatePostsScreen = ({ navigation }) => {
         ) : (
           <Camera
             style={styles.camera}
-            type={type}
             ref={(ref) => {
               setCamera(ref);
             }}
           >
             {photo && (
               <View style={styles.previewWrapper}>
-                <Image
-                  source={{ uri: photo.photo }}
-                  style={styles.previewPhoto}
-                />
+                <Image source={{ uri: photo }} style={styles.previewPhoto} />
               </View>
             )}
             <Pressable style={styles.circle} onPress={takePhoto}>

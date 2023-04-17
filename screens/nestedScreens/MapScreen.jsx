@@ -5,26 +5,28 @@ import MapView, { Marker } from "react-native-maps";
 const initialLocation = { latitude: 49.256779, longitude: 28.474588 };
 
 const MapScreen = ({ route }) => {
-  const [location, setLocation] = useState(initialLocation);
+  const { latitude, longitude } = route.params.location;
+  // const [location, setLocation] = useState(initialLocation);
 
-  useEffect(() => {
-    if (route.params) {
-      setLocation(route.params);
-    }
-    return;
-  }, [route.params]);
+  // useEffect(() => {
+  //   if (route.params) {
+  //     setLocation(route.params);
+  //   }
+  //   return;
+  // }, [route.params]);
 
   return (
     <View>
       <MapView
         style={styles.map}
         initialRegion={{
-          ...location,
+          latitude,
+          longitude,
           latitudeDelta: 0.001,
           longitudeDelta: 0.006,
         }}
       >
-        <Marker coordinate={location} />
+        <Marker coordinate={{ latitude, longitude, title: "travel photo" }} />
       </MapView>
     </View>
   );
